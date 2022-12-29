@@ -35,7 +35,7 @@ app.use(express.json({ exrended: false }));
 
 
 app.get('/', (req, res) => {
-  res.json('hello this is raj');
+  res.json('hello this is Raj from UDGAM');
 })
 
 //schema for payment

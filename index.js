@@ -214,8 +214,9 @@ app.post('/mailpass', async (req, res) => {
               UDGAM Web Operations`,
       };
       //sending verification mail
-      transporter.sendMail(mailOptions, function (error, info) {
+      await transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
+          console.log(error)
           res.status(500).send({ message: error });
         }
         res.status(201).send({ message: "YES" });

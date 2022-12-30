@@ -189,7 +189,7 @@ app.post('/internfairauth', async (req, res) => {
     if (existingUser) {
       await bcrypt.compare(password, existingUser.hashedPassword, function (err, result) {
         if (result) {
-          return res.status(201).send({ message: "YES" });
+          return res.status(201).send({ message: "YES", data:existingUser});
 
         }
         else{

@@ -25,11 +25,11 @@ jobs:
     - name: Set environment variables
       run: |
         touch config/config.env
-        echo "URI=${{secrets.URI}}" >> config/config.env
-        echo "USEREMAIL=${{secrets.USEREMAIL}}" >> config/config.env
-        echo "USERPASSWORD=${{secrets.USERPASSWORD}}" >> config/config.env
-        echo "RAZORPAY_KEY_ID=${{secrets.RAZORPAY_KEY_ID}}" >> config/config.env
-        echo "RAZORPAY_SECRET=${{secrets.RAZORPAY_SECRET}}" >> config/config.env
+        echo "URI="${{secrets.URI}}"" >> config/config.env
+        echo "USEREMAIL="${{secrets.USEREMAIL}}"" >> config/config.env
+        echo "USERPASSWORD="${{secrets.USERPASSWORD}}"" >> config/config.env
+        echo "RAZORPAY_KEY_ID="${{secrets.RAZORPAY_KEY_ID}}"" >> config/config.env
+        echo "RAZORPAY_SECRET="${{secrets.RAZORPAY_SECRET}}"" >> config/config.env
     - name: start
       run: sudo pm2 kill
     - name: start2
@@ -37,8 +37,3 @@ jobs:
       env:
         CI: false
         GENERATE_SOURCEMAP: false
-        URI: '${{ secrets.URI }}'
-        USEREMAIL: '${{ secrets.USEREMAIL }}'
-        USERPASSWORD: '${{ secrets.USERPASSWORD }}'
-        RAZORPAY_KEY_ID: '${{ secrets.RAZORPAY_KEY_ID }}'
-        RAZORPAY_SECRET: '${{ secrets.RAZORPAY_SECRET }}'

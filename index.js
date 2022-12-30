@@ -152,6 +152,7 @@ app.post('/registersave', async (req, res) => {
 
 })
 
+//Checking if he has purchased. If this API returns yes, then he purchased. If no then he didnt purchase. In req.body send only email address as udgam id
 app.post('/checkifpurchased', async (req, res) => {
   console.log("I am here checking")
   const client = new MongoClient(url);

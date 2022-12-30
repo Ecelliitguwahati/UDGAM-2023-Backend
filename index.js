@@ -1,4 +1,4 @@
-const PORT = process.env.PORT || 3000;
+
 const express = require('express');
 const app = express();
 const { mongoClient, MongoClient } = require('mongodb');
@@ -11,9 +11,9 @@ const saltRounds = 10;
 const mongoose = require('mongoose');
 var nodemailer = require("nodemailer");
 require('dotenv').config({ path: './config/config.env' });
-
+const PORT = process.env.PORT || 3000;
 // const url = process.env.URI
-console.log(process.env.URI)
+console.log(process.env.PORT)
 const url = process.env.URI
 app.use(express.json());
 const connectionParams = {
@@ -106,7 +106,7 @@ app.post('/pay-order', async (req, res) => {
 app.post('/registersave', async (req, res) => {
   console.log("I am here registering")
   const client = new MongoClient(url);
-  const { lastName, firstName, outlook, rollNo, email, password } = req.body;
+  const { lastName, firstName, outlook, rollNo, department, contact, email, password } = req.body;
   client.connect();
   const database = client.db('app-data');
   const users = database.collection('usersData');
@@ -135,9 +135,11 @@ app.post('/registersave', async (req, res) => {
           user_id: generatedId,
           firstName: sanitizedName,
           lastName: sanitizedLastname,
+          contact:contact,
           outlook: outlook,
-          rollno: rollNo,
+          rollNo: rollNo,
           email: sanitizedEmail,
+          department:department,
           hashedPassword: hash,
         }
         await users.insertOne(data);
@@ -201,6 +203,34 @@ app.post('/internfairauth', async (req, res) => {
     else {
       res.status(201).send({ message: "NO" });
     }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ message: err.message });
+  }
+});
+
+app.post('/checkoutlook', async (req, res) => {
+  console.log("I am here checking outlook")
+  const client = new MongoClient(url);
+  const { outlook ,rollNo} = req.body;
+  client.connect();
+  const database = client.db('app-data');
+  const users = database.collection('usersData');
+  try {
+    const existingUser = await users.findOne({ outlook });
+    console.log(existingUser)
+    if (existingUser) {
+          return res.status(201).send({ message: "OUTLOOKSAME"});
+      }
+      const existingUser2 = await users.findOne({ rollNo });
+    console.log(existingUser2)
+    if (existingUser2) {
+          return res.status(201).send({ message: "ROLLNOSAME"});
+      }
+      
+    
+    return  res.status(201).send({ message: "NO" });
+  
   } catch (err) {
     console.log(err);
     return res.status(500).send({ message: err.message });

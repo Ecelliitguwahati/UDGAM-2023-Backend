@@ -106,7 +106,7 @@ app.post('/pay-order', async (req, res) => {
 app.post('/registersave', async (req, res) => {
   console.log("I am here registering")
   const client = new MongoClient(url);
-  const { lastName, firstName, outlook, rollNo, department, contact, email, password } = req.body;
+  const { lastName, firstName, outlook, rollno, department, contact, email, password } = req.body;
   client.connect();
   const database = client.db('app-data');
   const users = database.collection('usersData');
@@ -137,7 +137,7 @@ app.post('/registersave', async (req, res) => {
           lastName: sanitizedLastname,
           contact:contact,
           outlook: outlook,
-          rollNo: rollNo,
+          rollno: rollno,
           email: sanitizedEmail,
           department:department,
           hashedPassword: hash,
@@ -212,7 +212,7 @@ app.post('/internfairauth', async (req, res) => {
 app.post('/checkoutlook', async (req, res) => {
   console.log("I am here checking outlook")
   const client = new MongoClient(url);
-  const { outlook ,rollNo} = req.body;
+  const { outlook ,rollno} = req.body;
   client.connect();
   const database = client.db('app-data');
   const users = database.collection('usersData');
@@ -222,7 +222,7 @@ app.post('/checkoutlook', async (req, res) => {
     if (existingUser) {
           return res.status(201).send({ message: "OUTLOOKSAME"});
       }
-      const existingUser2 = await users.findOne({ rollNo });
+      const existingUser2 = await users.findOne({ rollno });
     console.log(existingUser2)
     if (existingUser2) {
           return res.status(201).send({ message: "ROLLNOSAME"});

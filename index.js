@@ -20,6 +20,7 @@ const connectionParams = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }
+
 mongoose.connect(url, connectionParams)
   .then(() => {
     console.log('Connected to database ')
@@ -50,6 +51,19 @@ const OrderSchema = new mongoose.Schema({
 });
 
 const Order = mongoose.model('Order', OrderSchema);
+
+var transporter = nodemailer.createTransport({
+  service: "outlook", // hostname
+  secureConnection: false, // TLS requires secureConnection to be false
+  port: 587, // port for secure SMTP
+  tls: {
+    ciphers: "SSLv3",
+  },
+  auth: {
+    user: process.env.USEREMAIL,
+    pass: process.env.USERPASSWORD,
+  },
+});
 
 app.get('get-razorpay-key', (req, res) => {
   res.send({ key: process.env.RAZORPAY_KEY_ID });
@@ -154,6 +168,101 @@ app.post('/registersave', async (req, res) => {
 
 })
 
+//RESET PASSWORD REQ
+app.post('/resetpasswordreq', async (req, res) => {
+  console.log("I am here resetting req")
+  const client = new MongoClient(url);
+  const { email } = req.body;
+  client.connect();
+  const database = client.db('app-data');
+  const users = database.collection('usersData');
+  const tokens = database.collection('tokens');
+  await tokens.deleteMany({email});
+  try {
+    const existingUser = await users.findOne({ email });
+    console.log(existingUser)  
+    if (existingUser) {
+      const generatedId = uuidv4();
+      const tokendetails ={
+        token:generatedId,
+        email:email
+      }
+      await tokens.insertOne(tokendetails)
+      var mailOptions = {
+        from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
+        to: existingUser.email,
+        subject: "Request for resetting password of UDGAM Pass",
+        html: `Hello ${existingUser.firstName},
+        <br><br>
+        We received a request for resetting your UDGAM Pass password
+        <br><br>
+        Please set your new password here<br> www.udgamiitg.com/resetpass/do?token=${generatedId}&email=${email}
+         <br><br>
+        Don't share the link with anyone
+        <br><br>
+        With best wishes,<br>
+        Team UDGAM`,
+      };
+      //sending verification mail
+      await transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error)
+          res.status(500).send({ message: error });
+        }
+        res.status(201).send({ message: "YES" });
+      });
+    }
+    else {
+      res.status(201).send({ message: "NO" });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ message: err.message });
+  }
+});
+
+// RESET PASSWORD
+app.post('/resetpassword', async (req, res) => {
+  console.log("I am here resetting")
+  const client = new MongoClient(url);
+  const { email, newpwd, token } = req.body;
+  console.log(newpwd)
+  client.connect();
+  const database = client.db('app-data');
+  const users = database.collection('usersData');
+  const tokens = database.collection('tokens');
+  try {
+    const existingUser = await users.findOne({ email });
+    const existingtoken = await tokens.findOne({ token, email});
+    console.log(existingUser)
+    
+    if (existingUser && existingtoken) {
+      bcrypt.genSalt(saltRounds, function (err, salt) {
+        bcrypt.hash(newpwd, salt, async function (err, hash) {
+          try {
+            await users.updateOne( { email: email },
+            {
+              $set: {
+                hashedPassword:hash
+              }            
+            })
+            await tokens.deleteMany({email});
+            return res.status(201).json({ message: 'YES' });
+          } catch (err) {
+            return res.status(500).send({ message: err.message });
+          }
+        });
+      });     
+    }
+    else {
+      res.status(201).send({ message: "NO" });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ message: err.message });
+  }
+});
+
 //Checking if he has purchased. If this API returns yes, then he purchased. If no then he didnt purchase. In req.body send only email address as udgam id
 app.post('/checkifpurchased', async (req, res) => {
   console.log("I am here checking")
@@ -177,7 +286,7 @@ app.post('/checkifpurchased', async (req, res) => {
     return res.status(500).send({ message: err.message });
   }
 });
-
+// For auth in IF website using outlook and pwd
 app.post('/internfairauth', async (req, res) => {
   console.log("I am here checking")
   const client = new MongoClient(url);
@@ -208,7 +317,7 @@ app.post('/internfairauth', async (req, res) => {
     return res.status(500).send({ message: err.message });
   }
 });
-
+// Check if outlook and roll no are duplicate or not
 app.post('/checkoutlook', async (req, res) => {
   console.log("I am here checking outlook")
   const client = new MongoClient(url);
@@ -237,19 +346,8 @@ app.post('/checkoutlook', async (req, res) => {
   }
 });
 
-var transporter = nodemailer.createTransport({
-  service: "outlook", // hostname
-  secureConnection: false, // TLS requires secureConnection to be false
-  port: 587, // port for secure SMTP
-  tls: {
-    ciphers: "SSLv3",
-  },
-  auth: {
-    user: process.env.USEREMAIL,
-    pass: process.env.USERPASSWORD,
-  },
-});
 
+// Mail pass
 app.post('/mailpass', async (req, res) => {
   console.log("I am here checking")
   const client = new MongoClient(url);

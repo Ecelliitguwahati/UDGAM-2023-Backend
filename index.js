@@ -265,15 +265,16 @@ app.post('/mailpass', async (req, res) => {
         from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
         to: existingUser.email,
         subject: "Welcome to UDGAM 2023",
-        html: `Hi ${existingUser.firstName},
-              <br><br>
-              Thanks for registering for UDGAM and purchasing the pass!
-              <br>
-              Here is your pass credentials<br>
-              <b>Email- ${email}</b><br>
-              <b>Unique ID- </b><br><br>
-              Regards,<br>
-              UDGAM Web Operations`,
+        html: `Hello ${existingUser.firstName},
+        <br><br>
+        Thank you for purchasing the <b>UDGAM Pass</b>. With this pass, you can get access to events like Lecture Series, Internfair and Fun events.
+        <br><br>
+        Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use these credentials to login into intern fair website later</i>
+      <br><br>
+        In case you forget your password, please reset your password at www.udgamiitg.com/resetpass
+        <br><br>
+        With best wishes,<br>
+        Team UDGAM`,
       };
       //sending verification mail
       await transporter.sendMail(mailOptions, function (error, info) {

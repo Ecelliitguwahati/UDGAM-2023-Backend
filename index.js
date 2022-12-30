@@ -176,6 +176,37 @@ app.post('/checkifpurchased', async (req, res) => {
   }
 });
 
+app.post('/internfairauth', async (req, res) => {
+  console.log("I am here checking")
+  const client = new MongoClient(url);
+  const { outlook ,password} = req.body;
+  client.connect();
+  const database = client.db('app-data');
+  const users = database.collection('usersData');
+  try {
+    const existingUser = await users.findOne({ outlook });
+    console.log(existingUser)
+    if (existingUser) {
+      await bcrypt.compare(password, existingUser.hashedPassword, function (err, result) {
+        if (result) {
+          return res.status(201).send({ message: "YES" });
+
+        }
+        else{
+          return res.status(201).send({ message: "PWDWRONG" });
+        }
+      });
+      
+    }
+    else {
+      res.status(201).send({ message: "NO" });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({ message: err.message });
+  }
+});
+
 var transporter = nodemailer.createTransport({
   service: "outlook", // hostname
   secureConnection: false, // TLS requires secureConnection to be false
@@ -223,7 +254,7 @@ app.post('/mailpass', async (req, res) => {
         res.status(201).send({ message: "YES" });
       });
     }
-    else{
+    else {
       res.status(201).send({ message: "NO" });
     }
   } catch (err) {

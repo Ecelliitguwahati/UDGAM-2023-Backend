@@ -398,6 +398,39 @@ app.post("/backend/mailpass", async (req, res) => {
 	}
 });
 
+app.post("/backend/contact", async (req, res) => {
+	console.log("I am here checking");
+	const client = new MongoClient(url);
+	const { firstName,lastName,email,reason,message } = req.body;
+	client.connect();
+
+	try {
+var mailOptions = {
+				from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
+				to: process.env.USEREMAIL,
+				subject: `An user contcted (${reason})`,
+				html: `Name: ${firstName+" "+lastName}
+        <br>
+        Email: ${email}
+        <br>
+        Reason: ${reason}
+        <br>
+        Message: ${message}`,
+			};
+			//sending verification mail
+			await transporter.sendMail(mailOptions, function (error, info) {
+				if (error) {
+					console.log(error);
+					res.status(500).send({ message: error });
+				}
+				res.status(201).send({ message: "YES" });
+			});
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
+});
+
 app.listen(PORT, () => {
 	console.log("server is running on port " + PORT);
 });

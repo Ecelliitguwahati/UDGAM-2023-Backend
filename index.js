@@ -1,198 +1,207 @@
-
-const express = require('express');
+const express = require("express");
 const app = express();
-const { mongoClient, MongoClient } = require('mongodb');
-const { v4: uuidv4 } = require('uuid');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const cors = require('cors');
-const Razorpay = require('razorpay');
+const { mongoClient, MongoClient } = require("mongodb");
+const { v4: uuidv4 } = require("uuid");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const cors = require("cors");
+const Razorpay = require("razorpay");
 const saltRounds = 10;
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 var nodemailer = require("nodemailer");
-require('dotenv').config({ path: './config/config.env' });
+require("dotenv").config({ path: "./config/config.env" });
 const PORT = process.env.PORT || 3000;
 // const url = process.env.URI
-console.log(process.env.PORT)
-const url = process.env.URI
+console.log(process.env.PORT);
+const url = process.env.URI;
 app.use(express.json());
 const connectionParams = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+};
 
-mongoose.connect(url, connectionParams)
-  .then(() => {
-    console.log('Connected to database ')
-  })
-  .catch((err) => {
-    console.error(`Error connecting to the database. \n${err}`);
-  })
-
+mongoose
+	.connect(url, connectionParams)
+	.then(() => {
+		console.log("Connected to database ");
+	})
+	.catch((err) => {
+		console.error(`Error connecting to the database. \n${err}`);
+	});
 
 app.use(cors());
 
 app.use(express.json({ exrended: false }));
 
-
-app.get('/', (req, res) => {
-  res.json('hello this is Raj from UDGAM');
-})
+app.get("/backend/", (req, res) => {
+	res.json("hello this is Raj from UDGAM");
+});
 
 //schema for payment
 const OrderSchema = new mongoose.Schema({
-  isPaid: Boolean,
-  amount: Number,
-  razorpay: {
-    orderId: String,
-    paymentId: String,
-    signature: String
-  },
+	isPaid: Boolean,
+	amount: Number,
+	razorpay: {
+		orderId: String,
+		paymentId: String,
+		signature: String,
+	},
 });
 
-const Order = mongoose.model('Order', OrderSchema);
+const Order = mongoose.model("Order", OrderSchema);
 
 var transporter = nodemailer.createTransport({
-  service: "outlook", // hostname
-  secureConnection: false, // TLS requires secureConnection to be false
-  port: 587, // port for secure SMTP
-  tls: {
-    ciphers: "SSLv3",
-  },
-  auth: {
-    user: process.env.USEREMAIL,
-    pass: process.env.USERPASSWORD,
-  },
+	service: "outlook", // hostname
+	secureConnection: false, // TLS requires secureConnection to be false
+	port: 587, // port for secure SMTP
+	tls: {
+		ciphers: "SSLv3",
+	},
+	auth: {
+		user: process.env.USEREMAIL,
+		pass: process.env.USERPASSWORD,
+	},
 });
 
-app.get('get-razorpay-key', (req, res) => {
-  res.send({ key: process.env.RAZORPAY_KEY_ID });
-})
-app.get('/get-razorpay-key', (req, res) => {
-  res.send({ key: process.env.RAZORPAY_KEY_ID });
+// app.get('/backend/get-razorpay-key', (req, res) => {
+//   res.send({ key: process.env.RAZORPAY_KEY_ID });
+// })
+app.get("/backend/get-razorpay-key", (req, res) => {
+	res.send({ key: process.env.RAZORPAY_KEY_ID });
 });
 
-app.post('/create-order', async (req, res) => {
-  try {
-    console.log("I am here")
-    const instance = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_SECRET,
-    });
-    const options = {
-      amount: req.body.amount,
-      currency: 'INR',
-    };
-    const order = await instance.orders.create(options);
-    if (!order) return res.status(500).send('Some error occured');
-    res.send(order);
-  } catch (error) {
-
-    console.log(error)
-    res.status(500).send(error);
-  }
+app.post("/backend/create-order", async (req, res) => {
+	try {
+		console.log("I am here");
+		const instance = new Razorpay({
+			key_id: process.env.RAZORPAY_KEY_ID,
+			key_secret: process.env.RAZORPAY_SECRET,
+		});
+		const options = {
+			amount: req.body.amount,
+			currency: "INR",
+		};
+		const order = await instance.orders.create(options);
+		if (!order) return res.status(500).send("Some error occured");
+		res.send(order);
+	} catch (error) {
+		console.log(error);
+		res.status(500).send(error);
+	}
 });
 
-app.post('/pay-order', async (req, res) => {
-  try {
-    const { amount, razorpayPaymentId, razorpayOrderId, razorpaySignature } =
-      req.body;
-    const newOrder = Order({
-      isPaid: true,
-      amount: amount,
-      razorpay: {
-        orderId: razorpayOrderId,
-        paymentId: razorpayPaymentId,
-        signature: razorpaySignature,
-      },
-    });
-    await newOrder.save();
-    res.send({
-      msg: 'Payment was successfull',
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
-  }
+app.post("/backend/pay-order", async (req, res) => {
+	try {
+		const {
+			amount,
+			razorpayPaymentId,
+			razorpayOrderId,
+			razorpaySignature,
+		} = req.body;
+		const newOrder = Order({
+			isPaid: true,
+			amount: amount,
+			razorpay: {
+				orderId: razorpayOrderId,
+				paymentId: razorpayPaymentId,
+				signature: razorpaySignature,
+			},
+		});
+		await newOrder.save();
+		res.send({
+			msg: "Payment was successfull",
+		});
+	} catch (error) {
+		console.log(error);
+		res.status(500).send(error);
+	}
 });
 //register
 
-app.post('/registersave', async (req, res) => {
-  console.log("I am here registering")
-  const client = new MongoClient(url);
-  const { lastName, firstName, outlook, rollno, department, contact, email, password } = req.body;
-  client.connect();
-  const database = client.db('app-data');
-  const users = database.collection('usersData');
-  try {
-    const existingUser = await users.findOne({ email });
-    console.log(existingUser)
-    if (existingUser) {
-      console.log('user already exists');
-      res.status(201).send({ message: "You had already purchased the UDGAM Pass. Still you will be mailed for the same." });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({ message: err.message });
-  }
-  const generatedId = uuidv4();
-  // const salt = await bcrypt.genSalt(10);
-  // const hashedPassword = await bcrypt.hash(password,salt);
-  bcrypt.genSalt(saltRounds, function (err, salt) {
-    bcrypt.hash(password, salt, async function (err, hash) {
-      try {
-
-        const sanitizedEmail = email// === 'string' ? email.toLowerCase() : '';
-        const sanitizedName = firstName
-        const sanitizedLastname = lastName
-        const data = {
-          user_id: generatedId,
-          firstName: sanitizedName,
-          lastName: sanitizedLastname,
-          contact:contact,
-          outlook: outlook,
-          rollno: rollno,
-          email: sanitizedEmail,
-          department:department,
-          hashedPassword: hash,
-        }
-        await users.insertOne(data);
-        res.status(201).json({ userId: generatedId });
-      } catch (err) {
-        return res.status(500).send({ message: err.message });
-      }
-    });
-  });
-
-
-
-})
+app.post("/backend/registersave", async (req, res) => {
+	console.log("I am here registering");
+	const client = new MongoClient(url);
+	const {
+		lastName,
+		firstName,
+		outlook,
+		rollno,
+		department,
+		contact,
+		email,
+		password,
+	} = req.body;
+	client.connect();
+	const database = client.db("app-data");
+	const users = database.collection("usersData");
+	try {
+		const existingUser = await users.findOne({ email });
+		console.log(existingUser);
+		if (existingUser) {
+			console.log("user already exists");
+			res.status(201).send({
+				message:
+					"You had already purchased the UDGAM Pass. Still you will be mailed for the same.",
+			});
+		}
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
+	const generatedId = uuidv4();
+	// const salt = await bcrypt.genSalt(10);
+	// const hashedPassword = await bcrypt.hash(password,salt);
+	bcrypt.genSalt(saltRounds, function (err, salt) {
+		bcrypt.hash(password, salt, async function (err, hash) {
+			try {
+				const sanitizedEmail = email; // === 'string' ? email.toLowerCase() : '';
+				const sanitizedName = firstName;
+				const sanitizedLastname = lastName;
+				const data = {
+					user_id: generatedId,
+					firstName: sanitizedName,
+					lastName: sanitizedLastname,
+					contact: contact,
+					outlook: outlook,
+					rollno: rollno,
+					email: sanitizedEmail,
+					department: department,
+					hashedPassword: hash,
+				};
+				await users.insertOne(data);
+				res.status(201).json({ userId: generatedId });
+			} catch (err) {
+				return res.status(500).send({ message: err.message });
+			}
+		});
+	});
+});
 
 //RESET PASSWORD REQ
-app.post('/resetpasswordreq', async (req, res) => {
-  console.log("I am here resetting req")
-  const client = new MongoClient(url);
-  const { email } = req.body;
-  client.connect();
-  const database = client.db('app-data');
-  const users = database.collection('usersData');
-  const tokens = database.collection('tokens');
-  await tokens.deleteMany({email});
-  try {
-    const existingUser = await users.findOne({ email });
-    console.log(existingUser)  
-    if (existingUser) {
-      const generatedId = uuidv4();
-      const tokendetails ={
-        token:generatedId,
-        email:email
-      }
-      await tokens.insertOne(tokendetails)
-      var mailOptions = {
-        from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
-        to: existingUser.email,
-        subject: "Request for resetting password of UDGAM Pass",
-        html: `Hello ${existingUser.firstName},
+app.post("/backend/resetpasswordreq", async (req, res) => {
+	console.log("I am here resetting req");
+	const client = new MongoClient(url);
+	const { email } = req.body;
+	client.connect();
+	const database = client.db("app-data");
+	const users = database.collection("usersData");
+	const tokens = database.collection("tokens");
+	await tokens.deleteMany({ email });
+	try {
+		const existingUser = await users.findOne({ email });
+		console.log(existingUser);
+		if (existingUser) {
+			const generatedId = uuidv4();
+			const tokendetails = {
+				token: generatedId,
+				email: email,
+			};
+			await tokens.insertOne(tokendetails);
+			var mailOptions = {
+				from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
+				to: existingUser.email,
+				subject: "Request for resetting password of UDGAM Pass",
+				html: `Hello ${existingUser.firstName},
         <br><br>
         We received a request for resetting your UDGAM Pass password
         <br><br>
@@ -202,168 +211,166 @@ app.post('/resetpasswordreq', async (req, res) => {
         <br><br>
         With best wishes,<br>
         Team UDGAM`,
-      };
-      //sending verification mail
-      await transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error)
-          res.status(500).send({ message: error });
-        }
-        res.status(201).send({ message: "YES" });
-      });
-    }
-    else {
-      res.status(201).send({ message: "NO" });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({ message: err.message });
-  }
+			};
+			//sending verification mail
+			await transporter.sendMail(mailOptions, function (error, info) {
+				if (error) {
+					console.log(error);
+					res.status(500).send({ message: error });
+				}
+				res.status(201).send({ message: "YES" });
+			});
+		} else {
+			res.status(201).send({ message: "NO" });
+		}
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
 });
 
 // RESET PASSWORD
-app.post('/resetpassword', async (req, res) => {
-  console.log("I am here resetting")
-  const client = new MongoClient(url);
-  const { email, newpwd, token } = req.body;
-  console.log(newpwd)
-  client.connect();
-  const database = client.db('app-data');
-  const users = database.collection('usersData');
-  const tokens = database.collection('tokens');
-  try {
-    const existingUser = await users.findOne({ email });
-    const existingtoken = await tokens.findOne({ token, email});
-    console.log(existingUser)
-    
-    if (existingUser && existingtoken) {
-      bcrypt.genSalt(saltRounds, function (err, salt) {
-        bcrypt.hash(newpwd, salt, async function (err, hash) {
-          try {
-            await users.updateOne( { email: email },
-            {
-              $set: {
-                hashedPassword:hash
-              }            
-            })
-            await tokens.deleteMany({email});
-            return res.status(201).json({ message: 'YES' });
-          } catch (err) {
-            return res.status(500).send({ message: err.message });
-          }
-        });
-      });     
-    }
-    else {
-      res.status(201).send({ message: "NO" });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({ message: err.message });
-  }
+app.post("/backend/resetpassword", async (req, res) => {
+	console.log("I am here resetting");
+	const client = new MongoClient(url);
+	const { email, newpwd, token } = req.body;
+	console.log(newpwd);
+	client.connect();
+	const database = client.db("app-data");
+	const users = database.collection("usersData");
+	const tokens = database.collection("tokens");
+	try {
+		const existingUser = await users.findOne({ email });
+		const existingtoken = await tokens.findOne({ token, email });
+		console.log(existingUser);
+
+		if (existingUser && existingtoken) {
+			bcrypt.genSalt(saltRounds, function (err, salt) {
+				bcrypt.hash(newpwd, salt, async function (err, hash) {
+					try {
+						await users.updateOne(
+							{ email: email },
+							{
+								$set: {
+									hashedPassword: hash,
+								},
+							}
+						);
+						await tokens.deleteMany({ email });
+						return res.status(201).json({ message: "YES" });
+					} catch (err) {
+						return res.status(500).send({ message: err.message });
+					}
+				});
+			});
+		} else {
+			res.status(201).send({ message: "NO" });
+		}
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
 });
 
 //Checking if he has purchased. If this API returns yes, then he purchased. If no then he didnt purchase. In req.body send only email address as udgam id
-app.post('/checkifpurchased', async (req, res) => {
-  console.log("I am here checking")
-  const client = new MongoClient(url);
-  const { email } = req.body;
-  client.connect();
-  const database = client.db('app-data');
-  const users = database.collection('usersData');
-  try {
-    const existingUser = await users.findOne({ email });
-    console.log(existingUser)
-    if (existingUser) {
-      console.log('user already exists');
-      res.status(201).send({ message: "YES" });
-    }
-    else {
-      res.status(201).send({ message: "NO" });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({ message: err.message });
-  }
+app.post("/backend/checkifpurchased", async (req, res) => {
+	console.log("I am here checking");
+	const client = new MongoClient(url);
+	const { email } = req.body;
+	client.connect();
+	const database = client.db("app-data");
+	const users = database.collection("usersData");
+	try {
+		const existingUser = await users.findOne({ email });
+		console.log(existingUser);
+		if (existingUser) {
+			console.log("user already exists");
+			res.status(201).send({ message: "YES" });
+		} else {
+			res.status(201).send({ message: "NO" });
+		}
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
 });
 // For auth in IF website using outlook and pwd
-app.post('/internfairauth', async (req, res) => {
-  console.log("I am here checking")
-  const client = new MongoClient(url);
-  const { outlook ,password} = req.body;
-  client.connect();
-  const database = client.db('app-data');
-  const users = database.collection('usersData');
-  try {
-    const existingUser = await users.findOne({ outlook });
-    console.log(existingUser)
-    if (existingUser) {
-      await bcrypt.compare(password, existingUser.hashedPassword, function (err, result) {
-        if (result) {
-          return res.status(201).send({ message: "YES", data:existingUser});
-
-        }
-        else{
-          return res.status(201).send({ message: "PWDWRONG" });
-        }
-      });
-      
-    }
-    else {
-      res.status(201).send({ message: "NO" });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({ message: err.message });
-  }
+app.post("/backend/internfairauth", async (req, res) => {
+	console.log("I am here checking");
+	const client = new MongoClient(url);
+	const { outlook, password } = req.body;
+	client.connect();
+	const database = client.db("app-data");
+	const users = database.collection("usersData");
+	try {
+		const existingUser = await users.findOne({ outlook });
+		console.log(existingUser);
+		if (existingUser) {
+			await bcrypt.compare(
+				password,
+				existingUser.hashedPassword,
+				function (err, result) {
+					if (result) {
+						return res
+							.status(201)
+							.send({ message: "YES", data: existingUser });
+					} else {
+						return res.status(201).send({ message: "PWDWRONG" });
+					}
+				}
+			);
+		} else {
+			res.status(201).send({ message: "NO" });
+		}
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
 });
 // Check if outlook and roll no are duplicate or not
-app.post('/checkoutlook', async (req, res) => {
-  console.log("I am here checking outlook")
-  const client = new MongoClient(url);
-  const { outlook ,rollno} = req.body;
-  client.connect();
-  const database = client.db('app-data');
-  const users = database.collection('usersData');
-  try {
-    const existingUser = await users.findOne({ outlook });
-    console.log(existingUser)
-    if (existingUser) {
-          return res.status(201).send({ message: "OUTLOOKSAME"});
-      }
-      const existingUser2 = await users.findOne({ rollno });
-    console.log(existingUser2)
-    if (existingUser2) {
-          return res.status(201).send({ message: "ROLLNOSAME"});
-      }
-      
-    
-    return  res.status(201).send({ message: "NO" });
-  
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({ message: err.message });
-  }
+app.post("/backend/checkoutlook", async (req, res) => {
+	console.log("I am here checking outlook");
+	const client = new MongoClient(url);
+	const { outlook, rollno } = req.body;
+	client.connect();
+	const database = client.db("app-data");
+	const users = database.collection("usersData");
+	try {
+		const existingUser = await users.findOne({ outlook });
+		console.log(existingUser);
+		if (existingUser) {
+			return res.status(201).send({ message: "OUTLOOKSAME" });
+		}
+		const existingUser2 = await users.findOne({ rollno });
+		console.log(existingUser2);
+		if (existingUser2) {
+			return res.status(201).send({ message: "ROLLNOSAME" });
+		}
+
+		return res.status(201).send({ message: "NO" });
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
 });
 
-
 // Mail pass
-app.post('/mailpass', async (req, res) => {
-  console.log("I am here checking")
-  const client = new MongoClient(url);
-  const { email } = req.body;
-  client.connect();
-  const database = client.db('app-data');
-  const users = database.collection('usersData');
-  try {
-    const existingUser = await users.findOne({ email });
-    console.log(existingUser)
-    if (existingUser) {
-      var mailOptions = {
-        from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
-        to: existingUser.email,
-        subject: "Welcome to UDGAM 2023",
-        html: `Hello ${existingUser.firstName},
+app.post("/backend/mailpass", async (req, res) => {
+	console.log("I am here checking");
+	const client = new MongoClient(url);
+	const { email } = req.body;
+	client.connect();
+	const database = client.db("app-data");
+	const users = database.collection("usersData");
+	try {
+		const existingUser = await users.findOne({ email });
+		console.log(existingUser);
+		if (existingUser) {
+			var mailOptions = {
+				from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
+				to: existingUser.email,
+				subject: "Welcome to UDGAM 2023",
+				html: `Hello ${existingUser.firstName},
         <br><br>
         Thank you for purchasing the <b>UDGAM Pass</b>. With this pass, you can get access to events like Lecture Series, Internfair and Fun events.
         <br><br>
@@ -373,25 +380,24 @@ app.post('/mailpass', async (req, res) => {
         <br><br>
         With best wishes,<br>
         Team UDGAM`,
-      };
-      //sending verification mail
-      await transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error)
-          res.status(500).send({ message: error });
-        }
-        res.status(201).send({ message: "YES" });
-      });
-    }
-    else {
-      res.status(201).send({ message: "NO" });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({ message: err.message });
-  }
+			};
+			//sending verification mail
+			await transporter.sendMail(mailOptions, function (error, info) {
+				if (error) {
+					console.log(error);
+					res.status(500).send({ message: error });
+				}
+				res.status(201).send({ message: "YES" });
+			});
+		} else {
+			res.status(201).send({ message: "NO" });
+		}
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
 });
 
 app.listen(PORT, () => {
-  console.log('server is running on port ' + PORT);
-})
+	console.log("server is running on port " + PORT);
+});

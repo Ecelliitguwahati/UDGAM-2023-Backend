@@ -423,10 +423,11 @@ app.post("/backend/mailpass", async (req, res) => {
 	const users = database.collection("usersData");
 	try {
 		const existingUser = await users.findOne({ email });
-		const name = existingUser.firstName + " " + existingUser.lastName;
-		const id = existingUser.udgid;
+
 		console.log(existingUser);
 		if (existingUser) {
+			const name = existingUser.firstName + " " + existingUser.lastName;
+			const id = existingUser.udgid;
 			const buffers = [];
 			pdf.on('data', buffers.push.bind(buffers));
 			pdf.on('end', async () => {
@@ -462,12 +463,13 @@ app.post("/backend/mailpass", async (req, res) => {
 
 
 			var img = pdf.openImage('./UDGAMFRONT.png');
-			pdf.fontSize(8);
+			pdf.fontSize(25);
 			pdf.addPage({ size: [img.width, img.height], margin: 0 });
 			pdf.image(img, 0, 0);
-
-			pdf.text(name, 325.2345, 106.836)
-			pdf.text(id, 314.5105, 120.970667)
+            console.log(img.width);
+			console.log(img.height)
+			pdf.text(name, 972.4045, 317.8625)
+			pdf.text(id, 942.4245, 354.0105)
 			var img = pdf.openImage('./UDGAMBACK.png');
 			pdf.addPage({ size: [img.width, img.height], margin: 0 });
 			pdf.image(img, 0, 0);

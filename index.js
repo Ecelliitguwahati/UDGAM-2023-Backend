@@ -9,7 +9,12 @@ const Razorpay = require("razorpay");
 const saltRounds = 10;
 const mongoose = require("mongoose");
 var nodemailer = require("nodemailer");
+const pdfkit = require('pdfkit');
+// const blobStream  = require('blob-stream');
+// const doc = new PDFDocument;
+// const stream = doc.pipe(blobStream());
 require("dotenv").config({ path: "./config/config.env" });
+
 const PORT = process.env.PORT || 3000;
 // const url = process.env.URI
 console.log(process.env.PORT);
@@ -117,6 +122,17 @@ app.post("/backend/pay-order", async (req, res) => {
 	}
 });
 //register
+async function generateudgid(min, max,users) { // min and max included 
+	udgid= 'UDG-'+Math.floor(Math.random() * (max - min + 1) + min).toString();
+	const udgsame = await users.findOne({ udgid });
+	if(udgsame){
+		generateudgid(1000, 9999,users);
+	}
+	else{
+		return udgid;
+	}
+  }
+  
 
 app.post("/backend/registersave", async (req, res) => {
 	console.log("I am here registering");
@@ -131,23 +147,25 @@ app.post("/backend/registersave", async (req, res) => {
 		email,
 		password,
 	} = req.body;
+
 	client.connect();
-	const database = client.db("app-data");
-	const users = database.collection("usersData");
+    var udgid;
 	try {
+		const database = client.db("app-data");
+		const users = database.collection("usersData");
 		const existingUser = await users.findOne({ email });
+		 udgid = await generateudgid(1000,9999,users);
 		console.log(existingUser);
 		if (existingUser) {
+
+	
 			console.log("user already exists");
-			res.status(201).send({
+			return res.status(201).send({
 				message:
 					"You had already purchased the UDGAM Pass. Still you will be mailed for the same.",
 			});
 		}
-	} catch (err) {
-		console.log(err);
-		return res.status(500).send({ message: err.message });
-	}
+	
 	const generatedId = uuidv4();
 	// const salt = await bcrypt.genSalt(10);
 	// const hashedPassword = await bcrypt.hash(password,salt);
@@ -157,17 +175,33 @@ app.post("/backend/registersave", async (req, res) => {
 				const sanitizedEmail = email; // === 'string' ? email.toLowerCase() : '';
 				const sanitizedName = firstName;
 				const sanitizedLastname = lastName;
-				const data = {
-					user_id: generatedId,
-					firstName: sanitizedName,
-					lastName: sanitizedLastname,
-					contact: contact,
-					outlook: outlook,
-					rollno: rollno,
-					email: sanitizedEmail,
-					department: department,
-					hashedPassword: hash,
-				};
+				var data;
+				if(outlook &&rollno&&department){
+					 data = {
+						udgid:udgid,
+						user_id: generatedId,
+						firstName: sanitizedName,
+						lastName: sanitizedLastname,
+						contact: contact,
+						outlook: outlook,
+						rollno: rollno,
+						email: sanitizedEmail,
+						department: department,
+						hashedPassword: hash,
+					};
+				}
+				else{
+					data = {
+						udgid:udgid,
+						user_id: generatedId,
+						firstName: sanitizedName,
+						lastName: sanitizedLastname,
+						contact: contact,
+						email: sanitizedEmail,
+						hashedPassword: hash,
+					};
+				}
+				
 				await users.insertOne(data);
 				res.status(201).json({ userId: generatedId });
 			} catch (err) {
@@ -175,6 +209,10 @@ app.post("/backend/registersave", async (req, res) => {
 			}
 		});
 	});
+} catch (err) {
+	console.log(err);
+	return res.status(500).send({ message: err.message });
+}
 });
 
 //RESET PASSWORD REQ
@@ -358,37 +396,65 @@ app.post("/backend/checkoutlook", async (req, res) => {
 app.post("/backend/mailpass", async (req, res) => {
 	console.log("I am here checking");
 	const client = new MongoClient(url);
+	const pdf = new pdfkit({
+		autoFirstPage: false
+	});
 	const { email } = req.body;
 	client.connect();
 	const database = client.db("app-data");
 	const users = database.collection("usersData");
 	try {
 		const existingUser = await users.findOne({ email });
+		const name = existingUser.firstName + " " + existingUser.lastName;
+		const id = existingUser.udgid;
 		console.log(existingUser);
 		if (existingUser) {
-			var mailOptions = {
-				from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
-				to: existingUser.email,
-				subject: "Welcome to UDGAM 2023",
-				html: `Hello ${existingUser.firstName},
-        <br><br>
-        Thank you for purchasing the <b>UDGAM Pass</b>. With this pass, you can get access to events like Lecture Series, Internfair and Fun events.
-        <br><br>
-        Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use these credentials to login into intern fair website later</i>
-      <br><br>
-        In case you forget your password, please reset your password at www.udgamiitg.com/resetpass
-        <br><br>
-        With best wishes,<br>
-        Team UDGAM`,
-			};
-			//sending verification mail
-			await transporter.sendMail(mailOptions, function (error, info) {
-				if (error) {
-					console.log(error);
-					res.status(500).send({ message: error });
-				}
-				res.status(201).send({ message: "YES" });
+			const buffers = [];
+			pdf.on('data', buffers.push.bind(buffers));
+			pdf.on('end', async () => {
+				let pdfData = Buffer.concat(buffers);
+				var mailOptions = {
+					from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
+					to: existingUser.email,
+					subject: "Welcome to UDGAM 2023",
+					html: `Hello ${existingUser.firstName},
+						<br><br>
+						Thank you for purchasing the <b>UDGAM Pass</b>. With this pass, you can get access to events like Lecture Series, Internfair and Fun events.
+						<br><br>
+						Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use these credentials to login into intern fair website later</i>
+						<br><br>
+						In case you forget your password, please reset your password at www.udgamiitg.com/resetpass
+						<br><br>
+						With best wishes,<br>
+						Team UDGAM`,
+					attachments: [{
+						filename: 'UDGAM Pass.pdf',
+						content: pdfData
+					}]
+				};
+				//sending verification mail
+				await transporter.sendMail(mailOptions, function (error, info) {
+					if (error) {
+						console.log(error);
+						res.status(500).send({ message: error });
+					}
+					return res.status(201).send({ message: "YES" });
+				});
 			});
+
+
+			var img = pdf.openImage('./UDGAMFRONT.png');
+			pdf.fontSize(8);
+			pdf.addPage({ size: [img.width, img.height],margin:0});
+			pdf.image(img, 0, 0);
+			
+			pdf.text(name, 325.2345, 106.836)
+			pdf.text(id, 314.5105, 120.970667)
+			var img = pdf.openImage('./UDGAMBACK.png');
+			pdf.addPage({ size: [img.width, img.height],margin:0});
+			pdf.image(img, 0, 0);
+			pdf.end();
+
 		} else {
 			res.status(201).send({ message: "NO" });
 		}
@@ -401,30 +467,30 @@ app.post("/backend/mailpass", async (req, res) => {
 app.post("/backend/contact", async (req, res) => {
 	console.log("I am here checking");
 	const client = new MongoClient(url);
-	const { firstName,lastName,email,reason,message } = req.body;
+	const { firstName, lastName, email, reason, message } = req.body;
 	client.connect();
 
 	try {
-var mailOptions = {
-				from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
-				to: process.env.USEREMAIL,
-				subject: `An user contcted (${reason})`,
-				html: `Name: ${firstName+" "+lastName}
+		var mailOptions = {
+			from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
+			to: process.env.USEREMAIL,
+			subject: `An user contcted (${reason})`,
+			html: `Name: ${firstName + " " + lastName}
         <br>
         Email: ${email}
         <br>
         Reason: ${reason}
         <br>
         Message: ${message}`,
-			};
-			//sending verification mail
-			await transporter.sendMail(mailOptions, function (error, info) {
-				if (error) {
-					console.log(error);
-					res.status(500).send({ message: error });
-				}
-				res.status(201).send({ message: "YES" });
-			});
+		};
+		//sending verification mail
+		await transporter.sendMail(mailOptions, function (error, info) {
+			if (error) {
+				console.log(error);
+				res.status(500).send({ message: error });
+			}
+			res.status(201).send({ message: "YES" });
+		});
 	} catch (err) {
 		console.log(err);
 		return res.status(500).send({ message: err.message });

@@ -122,18 +122,36 @@ app.post("/backend/pay-order", async (req, res) => {
 	}
 });
 //register
-async function generateudgid(min, max,users) { // min and max included 
-	udgid= 'UDG-'+Math.floor(Math.random() * (max - min + 1) + min).toString();
+async function generateudgid(min, max, users) { // min and max included 
+	udgid = 'UDG-' + Math.floor(Math.random() * (max - min + 1) + min).toString();
 	const udgsame = await users.findOne({ udgid });
-	if(udgsame){
-		generateudgid(1000, 9999,users);
+	if (udgsame) {
+		generateudgid(1000, 9999, users);
 	}
-	else{
+	else {
 		return udgid;
 	}
-  }
-  
+}
 
+app.post("/backend/addtolist", async (req, res) => {
+	console.log("I am here registering");
+	const client = new MongoClient(url);
+	const database = client.db("app-data");
+	const users = database.collection("emaillists");
+	client.connect();
+	const {
+		email
+	} = req.body;
+	const dupemail = email.email;
+	const existingUser = await users.findOne({ email: dupemail });
+	console.log(existingUser)
+	if (existingUser) {
+	}
+	else {
+		await users.insertOne(email);
+	}
+	return res.status(201).send("YES");
+});
 app.post("/backend/registersave", async (req, res) => {
 	console.log("I am here registering");
 	const client = new MongoClient(url);
@@ -149,70 +167,70 @@ app.post("/backend/registersave", async (req, res) => {
 	} = req.body;
 
 	client.connect();
-    var udgid;
+	var udgid;
 	try {
 		const database = client.db("app-data");
 		const users = database.collection("usersData");
 		const existingUser = await users.findOne({ email });
-		 udgid = await generateudgid(1000,9999,users);
+		udgid = await generateudgid(1000, 9999, users);
 		console.log(existingUser);
 		if (existingUser) {
 
-	
+
 			console.log("user already exists");
 			return res.status(201).send({
 				message:
 					"You had already purchased the UDGAM Pass. Still you will be mailed for the same.",
 			});
 		}
-	
-	const generatedId = uuidv4();
-	// const salt = await bcrypt.genSalt(10);
-	// const hashedPassword = await bcrypt.hash(password,salt);
-	bcrypt.genSalt(saltRounds, function (err, salt) {
-		bcrypt.hash(password, salt, async function (err, hash) {
-			try {
-				const sanitizedEmail = email; // === 'string' ? email.toLowerCase() : '';
-				const sanitizedName = firstName;
-				const sanitizedLastname = lastName;
-				var data;
-				if(outlook &&rollno&&department){
-					 data = {
-						udgid:udgid,
-						user_id: generatedId,
-						firstName: sanitizedName,
-						lastName: sanitizedLastname,
-						contact: contact,
-						outlook: outlook,
-						rollno: rollno,
-						email: sanitizedEmail,
-						department: department,
-						hashedPassword: hash,
-					};
+
+		const generatedId = uuidv4();
+		// const salt = await bcrypt.genSalt(10);
+		// const hashedPassword = await bcrypt.hash(password,salt);
+		bcrypt.genSalt(saltRounds, function (err, salt) {
+			bcrypt.hash(password, salt, async function (err, hash) {
+				try {
+					const sanitizedEmail = email; // === 'string' ? email.toLowerCase() : '';
+					const sanitizedName = firstName;
+					const sanitizedLastname = lastName;
+					var data;
+					if (outlook && rollno && department) {
+						data = {
+							udgid: udgid,
+							user_id: generatedId,
+							firstName: sanitizedName,
+							lastName: sanitizedLastname,
+							contact: contact,
+							outlook: outlook,
+							rollno: rollno,
+							email: sanitizedEmail,
+							department: department,
+							hashedPassword: hash,
+						};
+					}
+					else {
+						data = {
+							udgid: udgid,
+							user_id: generatedId,
+							firstName: sanitizedName,
+							lastName: sanitizedLastname,
+							contact: contact,
+							email: sanitizedEmail,
+							hashedPassword: hash,
+						};
+					}
+
+					await users.insertOne(data);
+					res.status(201).json({ userId: generatedId });
+				} catch (err) {
+					return res.status(500).send({ message: err.message });
 				}
-				else{
-					data = {
-						udgid:udgid,
-						user_id: generatedId,
-						firstName: sanitizedName,
-						lastName: sanitizedLastname,
-						contact: contact,
-						email: sanitizedEmail,
-						hashedPassword: hash,
-					};
-				}
-				
-				await users.insertOne(data);
-				res.status(201).json({ userId: generatedId });
-			} catch (err) {
-				return res.status(500).send({ message: err.message });
-			}
+			});
 		});
-	});
-} catch (err) {
-	console.log(err);
-	return res.status(500).send({ message: err.message });
-}
+	} catch (err) {
+		console.log(err);
+		return res.status(500).send({ message: err.message });
+	}
 });
 
 //RESET PASSWORD REQ
@@ -445,13 +463,13 @@ app.post("/backend/mailpass", async (req, res) => {
 
 			var img = pdf.openImage('./UDGAMFRONT.png');
 			pdf.fontSize(8);
-			pdf.addPage({ size: [img.width, img.height],margin:0});
+			pdf.addPage({ size: [img.width, img.height], margin: 0 });
 			pdf.image(img, 0, 0);
-			
+
 			pdf.text(name, 325.2345, 106.836)
 			pdf.text(id, 314.5105, 120.970667)
 			var img = pdf.openImage('./UDGAMBACK.png');
-			pdf.addPage({ size: [img.width, img.height],margin:0});
+			pdf.addPage({ size: [img.width, img.height], margin: 0 });
 			pdf.image(img, 0, 0);
 			pdf.end();
 

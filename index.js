@@ -443,7 +443,7 @@ app.post("/backend/mailpass", async (req, res) => {
 						<br><br>
 						Thank you for purchasing the <b>UDGAM Pass</b>. With this pass, you can get access to events like Lecture Series, Internfair and Fun events.
 						<br><br>
-						Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use these credentials to login into intern fair website later</i>
+						Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use your outlook Id and password to login into intern fair website later</i>
 						<br><br>
 						In case you forget your password, please reset your password at www.udgamiitg.com/resetpass
 						<br><br>

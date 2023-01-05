@@ -28,14 +28,10 @@ const connectionParams = {
 	useUnifiedTopology: true,
 };
 
-mongoose
-	.connect(url, connectionParams)
-	.then(() => {
-		console.log("Connected to database ");
-	})
-	.catch((err) => {
-		console.error(`Error connecting to the database. \n${err}`);
-	});
+
+
+const client = new MongoClient(url);
+// Use connect method to connect to the Server
 
 app.use(cors());
 
@@ -79,6 +75,7 @@ app.get("/backend/get-razorpay-key", (req, res) => {
 });
 
 app.post("/backend/create-order", async (req, res) => {
+
 	try {
 		console.log("I am here");
 		const instance = new Razorpay({
@@ -91,14 +88,25 @@ app.post("/backend/create-order", async (req, res) => {
 		};
 		const order = await instance.orders.create(options);
 		if (!order) return res.status(500).send("Some error occured");
-		res.send(order);
+		client.close();
+		return res.send(order);
 	} catch (error) {
 		console.log(error);
-		res.status(500).send(error);
+		client.close();
+		return res.status(500).send(error);
 	}
+
 });
 
 app.post("/backend/pay-order", async (req, res) => {
+	mongoose
+	.connect(url, connectionParams)
+	.then(() => {
+		console.log("Connected to database ");
+	})
+	.catch((err) => {
+		console.error(`Error connecting to the database. \n${err}`);
+	});
 	try {
 		const {
 			amount,
@@ -116,17 +124,20 @@ app.post("/backend/pay-order", async (req, res) => {
 			},
 		});
 		await newOrder.save();
-		res.send({
+		mongoose.connection.close()
+		return res.send({
 			msg: "Payment was successfull",
 		});
 	} catch (error) {
 		console.log(error);
-		res.status(500).send(error);
+		mongoose.connection.close()
+		return res.status(500).send(error);
 	}
+
 });
 //register
 async function generateudgid(min, max, users) { // min and max included 
-	udgid = 'UDG-' + Math.floor(Math.random() * (max - min + 1) + min).toString();
+	udgid = 'UDG-' + Math.floor(Math.random() * (max - min + 1) + min).toString() + "-" + Math.floor(Math.random() * (max - min + 1) + min).toString();
 	const udgsame = await users.findOne({ udgid });
 	if (udgsame) {
 		generateudgid(1000, 9999, users);
@@ -137,27 +148,37 @@ async function generateudgid(min, max, users) { // min and max included
 }
 
 app.post("/backend/addtolist", async (req, res) => {
-	console.log("I am here registering");
-	const client = new MongoClient(url);
-	const database = client.db("app-data");
-	const users = database.collection("emaillists");
-	client.connect();
-	const {
-		email
-	} = req.body;
-	const dupemail = email.email;
-	const existingUser = await users.findOne({ email: dupemail });
-	console.log(existingUser)
-	if (existingUser) {
-	}
-	else {
-		await users.insertOne(email);
-	}
-	return res.status(201).send("YES");
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
+		console.log("I am here registering");
+		const database = client.db("app-data");
+		const users = database.collection("emaillists");
+	
+		const {
+			email
+		} = req.body;
+		const dupemail = email;
+		console.log(dupemail)
+		const existingUser = await users.findOne({ email: dupemail });
+		console.log(existingUser)
+		if (existingUser) {
+		}
+		else {
+			await users.insertOne({
+				email:email
+			});
+			
+		}
+	  
+		client.close();
+		return res.status(201).send({message:"YES"});
+	  });
+	
+	
 });
 app.post("/backend/registersave", async (req, res) => {
 	console.log("I am here registering");
-	const client = new MongoClient(url);
+
 	const {
 		lastName,
 		firstName,
@@ -169,16 +190,19 @@ app.post("/backend/registersave", async (req, res) => {
 		password,
 	} = req.body;
 
-	client.connect();
+
 	var udgid;
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
 	try {
+		
 		const database = client.db("app-data");
 		const users = database.collection("usersData");
 		const existingUser = await users.findOne({ email });
 		udgid = await generateudgid(1000, 9999, users);
 		console.log(existingUser);
 		if (existingUser) {
-
+			client.close()
 
 			console.log("user already exists");
 			return res.status(201).send({
@@ -224,24 +248,29 @@ app.post("/backend/registersave", async (req, res) => {
 					}
 
 					await users.insertOne(data);
-					res.status(201).json({ userId: generatedId });
+					client.close();
+					return res.status(201).json({ userId: generatedId });
 				} catch (err) {
+					client.close();
 					return res.status(500).send({ message: err.message });
 				}
 			});
 		});
 	} catch (err) {
+		client.close();
 		console.log(err);
 		return res.status(500).send({ message: err.message });
 	}
+});
 });
 
 //RESET PASSWORD REQ
 app.post("/backend/resetpasswordreq", async (req, res) => {
 	console.log("I am here resetting req");
-	const client = new MongoClient(url);
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
 	const { email } = req.body;
-	client.connect();
+
 	const database = client.db("app-data");
 	const users = database.collection("usersData");
 	const tokens = database.collection("tokens");
@@ -274,27 +303,33 @@ app.post("/backend/resetpasswordreq", async (req, res) => {
 			//sending verification mail
 			await transporter.sendMail(mailOptions, function (error, info) {
 				if (error) {
+					client.close();
 					console.log(error);
 					res.status(500).send({ message: error });
 				}
+				client.close()
 				res.status(201).send({ message: "YES" });
 			});
 		} else {
-			res.status(201).send({ message: "NO" });
+			client.close()
+			return res.status(201).send({ message: "NO" });
 		}
 	} catch (err) {
 		console.log(err);
+		client.close()
 		return res.status(500).send({ message: err.message });
 	}
+});
 });
 
 // RESET PASSWORD
 app.post("/backend/resetpassword", async (req, res) => {
 	console.log("I am here resetting");
-	const client = new MongoClient(url);
+
 	const { email, newpwd, token } = req.body;
-	console.log(newpwd);
-	client.connect();
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
+
 	const database = client.db("app-data");
 	const users = database.collection("usersData");
 	const tokens = database.collection("tokens");
@@ -316,27 +351,34 @@ app.post("/backend/resetpassword", async (req, res) => {
 							}
 						);
 						await tokens.deleteMany({ email });
+						 client.close()
 						return res.status(201).json({ message: "YES" });
 					} catch (err) {
+						client.close()
 						return res.status(500).send({ message: err.message });
 					}
 				});
 			});
 		} else {
-			res.status(201).send({ message: "NO" });
+			client.close();
+			return res.status(201).send({ message: "NO" });
 		}
 	} catch (err) {
 		console.log(err);
+		client.close()
 		return res.status(500).send({ message: err.message });
 	}
+});
 });
 
 //Checking if he has purchased. If this API returns yes, then he purchased. If no then he didnt purchase. In req.body send only email address as udgam id
 app.post("/backend/checkifpurchased", async (req, res) => {
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
 	console.log("I am here checking");
-	const client = new MongoClient(url);
+
 	const { email } = req.body;
-	client.connect();
+
 	const database = client.db("app-data");
 	const users = database.collection("usersData");
 	try {
@@ -344,21 +386,26 @@ app.post("/backend/checkifpurchased", async (req, res) => {
 		console.log(existingUser);
 		if (existingUser) {
 			console.log("user already exists");
-			res.status(201).send({ message: "YES" });
+			client.close()
+			return res.status(201).send({ message: "YES" });
 		} else {
-			res.status(201).send({ message: "NO" });
+			client.close()
+			return res.status(201).send({ message: "NO" });
 		}
 	} catch (err) {
 		console.log(err);
+		client.close()
 		return res.status(500).send({ message: err.message });
 	}
+});
 });
 // For auth in IF website using outlook and pwd
 app.post("/backend/internfairauth", async (req, res) => {
 	console.log("I am here checking");
-	const client = new MongoClient(url);
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
 	const { outlook, password } = req.body;
-	client.connect();
+
 	const database = client.db("app-data");
 	const users = database.collection("usersData");
 	try {
@@ -370,58 +417,69 @@ app.post("/backend/internfairauth", async (req, res) => {
 				existingUser.hashedPassword,
 				function (err, result) {
 					if (result) {
+						client.close()
 						return res
 							.status(201)
 							.send({ message: "YES", data: existingUser });
 					} else {
+						client.close()
 						return res.status(201).send({ message: "PWDWRONG" });
 					}
 				}
 			);
 		} else {
-			res.status(201).send({ message: "NO" });
+			client.close()
+			return res.status(201).send({ message: "NO" });
 		}
 	} catch (err) {
 		console.log(err);
+		client.close()
 		return res.status(500).send({ message: err.message });
 	}
+});
 });
 // Check if outlook and roll no are duplicate or not
 app.post("/backend/checkoutlook", async (req, res) => {
 	console.log("I am here checking outlook");
-	const client = new MongoClient(url);
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
 	const { outlook, rollno } = req.body;
-	client.connect();
+
 	const database = client.db("app-data");
 	const users = database.collection("usersData");
 	try {
 		const existingUser = await users.findOne({ outlook });
 		console.log(existingUser);
 		if (existingUser) {
+			client.close()
 			return res.status(201).send({ message: "OUTLOOKSAME" });
 		}
 		const existingUser2 = await users.findOne({ rollno });
 		console.log(existingUser2);
 		if (existingUser2) {
+			client.close()
 			return res.status(201).send({ message: "ROLLNOSAME" });
 		}
 
 		return res.status(201).send({ message: "NO" });
 	} catch (err) {
 		console.log(err);
+		client.close()
 		return res.status(500).send({ message: err.message });
 	}
+});
 });
 
 // Mail pass
 app.post("/backend/mailpass", async (req, res) => {
 	console.log("I am here checking");
-	const client = new MongoClient(url);
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
 	const pdf = new pdfkit({
 		autoFirstPage: false
 	});
 	const { email } = req.body;
-	client.connect();
+
 	const database = client.db("app-data");
 	const users = database.collection("usersData");
 	try {
@@ -437,7 +495,7 @@ app.post("/backend/mailpass", async (req, res) => {
 				let pdfData = Buffer.concat(buffers);
 				var mailOptions = {
 					from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
-					to: existingUser.email,
+					to: [existingUser.email,existingUser.outlook?existingUser.outlook:null],
 					subject: "Welcome to UDGAM 2023",
 					html: `Hello ${existingUser.firstName},
 						<br><br>
@@ -457,9 +515,10 @@ app.post("/backend/mailpass", async (req, res) => {
 				//sending verification mail
 				await transporter.sendMail(mailOptions, function (error, info) {
 					if (error) {
-						console.log(error);
-						res.status(500).send({ message: error });
+						console.log(error);client.close()
+						return res.status(500).send({ message: error });
 					}
+					client.close()
 					return res.status(201).send({ message: "YES" });
 				});
 			});
@@ -469,7 +528,7 @@ app.post("/backend/mailpass", async (req, res) => {
 			pdf.fontSize(25);
 			pdf.addPage({ size: [img.width, img.height], margin: 0 });
 			pdf.image(img, 0, 0);
-            console.log(img.width);
+			console.log(img.width);
 			console.log(img.height)
 			pdf.text(name, 972.4045, 317.8625)
 			pdf.text(id, 942.4245, 354.0105)
@@ -479,19 +538,22 @@ app.post("/backend/mailpass", async (req, res) => {
 			pdf.end();
 
 		} else {
-			res.status(201).send({ message: "NO" });
+			client.close()
+			return res.status(201).send({ message: "NO" });
 		}
 	} catch (err) {
 		console.log(err);
+		client.close()
 		return res.status(500).send({ message: err.message });
 	}
+});
 });
 
 app.post("/backend/contact", async (req, res) => {
 	console.log("I am here checking");
-	const client = new MongoClient(url);
+	client.connect(async function(err) {
+		console.log("Connected successfully to server");
 	const { firstName, lastName, email, reason, message } = req.body;
-	client.connect();
 
 	try {
 		var mailOptions = {
@@ -510,14 +572,18 @@ app.post("/backend/contact", async (req, res) => {
 		await transporter.sendMail(mailOptions, function (error, info) {
 			if (error) {
 				console.log(error);
-				res.status(500).send({ message: error });
+				client.close()
+				return res.status(500).send({ message: error });
 			}
-			res.status(201).send({ message: "YES" });
+			client.close()
+			return res.status(201).send({ message: "YES" });
 		});
 	} catch (err) {
 		console.log(err);
+		client.close()
 		return res.status(500).send({ message: err.message });
 	}
+});
 });
 
 app.listen(PORT, () => {

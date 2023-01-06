@@ -99,41 +99,42 @@ app.post("/backend/create-order", async (req, res) => {
 });
 
 app.post("/backend/pay-order", async (req, res) => {
-	await mongoose
-		.connect(url, connectionParams)
-		.then(() => {
-			console.log("Connected to database ");
-		})
-		.catch((err) => {
-			console.error(`Error connecting to the database. \n${err}`);
-		});
-	try {
-		const {
-			amount,
-			razorpayPaymentId,
-			razorpayOrderId,
-			razorpaySignature,
-		} = req.body;
-		const newOrder = Order({
-			isPaid: true,
-			amount: amount,
-			razorpay: {
-				orderId: razorpayOrderId,
-				paymentId: razorpayPaymentId,
-				signature: razorpaySignature,
-			},
-		});
-		await newOrder.save();
-		mongoose.connection.close()
-		return res.send({
-			msg: "Payment was successfull",
-		});
-	} catch (error) {
-		console.log(error);
-		mongoose.connection.close()
-		return res.status(500).send(error);
-	}
+	await client.connect(async function (err) {
+		console.log("Connected successfully to server");
+		console.log("I am here registering");
+		try {
+			const {
+				amount,
+				razorpayPaymentId,
+				razorpayOrderId,
+				razorpaySignature,
+			} = req.body;
+			const database = client.db("test");
+			const orders = database.collection("orders");
+			await orders.insertOne({
+				isPaid: true,
+				amount: amount,
+				razorpay: {
+					orderId: razorpayOrderId,
+					paymentId: razorpayPaymentId,
+					signature: razorpaySignature,
+				},
+			});
 
+			
+			client.close();
+			
+			return res.send({
+				msg: "Payment was successfull",
+			});
+		} catch (error) {
+			console.log(error);
+			client.close();
+			return res.status(500).send(error);
+		}
+	
+	});
+	
 });
 //register
 async function generateudgid(min, max, users) { // min and max included 

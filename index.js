@@ -98,44 +98,44 @@ app.post("/backend/create-order", async (req, res) => {
 
 });
 
-app.post("/backend/pay-order", async (req, res) => {
-	await client.connect(async function (err) {
-		console.log("Connected successfully to server");
-		console.log("I am here registering");
-		try {
-			const {
-				amount,
-				razorpayPaymentId,
-				razorpayOrderId,
-				razorpaySignature,
-			} = req.body;
-			const database = client.db("test");
-			const orders = database.collection("orders");
-			await orders.insertOne({
-				isPaid: true,
-				amount: amount,
-				razorpay: {
-					orderId: razorpayOrderId,
-					paymentId: razorpayPaymentId,
-					signature: razorpaySignature,
-				},
-			});
+// app.post("/backend/pay-order", async (req, res) => {
+// 	await client.connect(async function (err) {
+// 		console.log("Connected successfully to server");
+// 		console.log("I am here registering");
+// 		try {
+// 			const {
+// 				amount,
+// 				razorpayPaymentId,
+// 				razorpayOrderId,
+// 				razorpaySignature,
+// 			} = req.body;
+// 			const database = client.db("test");
+// 			const orders = database.collection("orders");
+// 			await orders.insertOne({
+// 				isPaid: true,
+// 				amount: amount,
+// 				razorpay: {
+// 					orderId: razorpayOrderId,
+// 					paymentId: razorpayPaymentId,
+// 					signature: razorpaySignature,
+// 				},
+// 			});
 
 			
-			client.close();
+// 			client.close();
 			
-			return res.send({
-				msg: "Payment was successfull",
-			});
-		} catch (error) {
-			console.log(error);
-			client.close();
-			return res.status(500).send(error);
-		}
+// 			return res.send({
+// 				msg: "Payment was successfull",
+// 			});
+// 		} catch (error) {
+// 			console.log(error);
+// 			client.close();
+// 			return res.status(500).send(error);
+// 		}
 	
-	});
+// 	});
 	
-});
+// });
 //register
 async function generateudgid(min, max, users) { // min and max included 
 	udgid = 'UDG-' + Math.floor(Math.random() * (max - min + 1) + min).toString() + "-" + Math.floor(Math.random() * (max - min + 1) + min).toString();

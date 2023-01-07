@@ -190,7 +190,9 @@ app.post("/backend/registersave", async (req, res) => {
 		email,
 		password,
 	} = req.body;
-
+    if (lastName ==null||firstName==null || contact==null || email==null || password==null){
+		return res.status(400).send({ message: "Unauthorized" });
+	}
 
 	var udgid;
 	await client.connect(async function (err) {

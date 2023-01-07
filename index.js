@@ -299,7 +299,7 @@ app.post("/backend/resetpasswordreq", async (req, res) => {
         <br><br>
         We received a request for resetting your UDGAM Pass password
         <br><br>
-        Please set your new password here<br> www.udgamiitg.com/resetpass/do?token=${generatedId}&email=${email}
+        Please set your new password here<br> www.udgamiitg.com/resetpass/do?token=${generatedId}&email=${existingUser.email}
          <br><br>
         The token will automatically expire after 10 minutes. Don't share the link with anyone
         <br><br>

@@ -121,9 +121,9 @@ app.post("/backend/create-order", async (req, res) => {
 // 				},
 // 			});
 
-			
+
 // 			client.close();
-			
+
 // 			return res.send({
 // 				msg: "Payment was successfull",
 // 			});
@@ -132,9 +132,9 @@ app.post("/backend/create-order", async (req, res) => {
 // 			client.close();
 // 			return res.status(500).send(error);
 // 		}
-	
+
 // 	});
-	
+
 // });
 //register
 async function generateudgid(min, max, users) { // min and max included 
@@ -190,7 +190,7 @@ app.post("/backend/registersave", async (req, res) => {
 		email,
 		password,
 	} = req.body;
-    if (lastName ==null||firstName==null || contact==null || email==null || password==null){
+	if (lastName == null || firstName == null || contact == null || email == null || password == null) {
 		return res.status(400).send({ message: "Unauthorized" });
 	}
 
@@ -277,20 +277,23 @@ app.post("/backend/resetpasswordreq", async (req, res) => {
 		const database = client.db("app-data");
 		const users = database.collection("usersData");
 		const tokens = database.collection("tokens");
-		await tokens.deleteMany({ email });
+		
 		try {
-			const existingUser = await users.findOne({ email });
+			var existingUser = await users.findOne({ email });
+			if (existingUser == null)
+				existingUser = await users.findOne({ outlook: email });
 			console.log(existingUser);
+			await tokens.deleteMany({ email:existingUser.email });
 			if (existingUser) {
 				const generatedId = uuidv4();
 				const tokendetails = {
 					token: generatedId,
-					email: email,
+					email: existingUser.email ,
 				};
 				await tokens.insertOne(tokendetails);
 				var mailOptions = {
 					from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
-					to: existingUser.email,
+					to: [existingUser.email, existingUser.outlook ? existingUser.outlook : null],
 					subject: "Request for resetting password of UDGAM Pass",
 					html: `Hello ${existingUser.firstName},
         <br><br>
@@ -298,7 +301,7 @@ app.post("/backend/resetpasswordreq", async (req, res) => {
         <br><br>
         Please set your new password here<br> www.udgamiitg.com/resetpass/do?token=${generatedId}&email=${email}
          <br><br>
-        Don't share the link with anyone
+        The token will automatically expire after 10 minutes. Don't share the link with anyone
         <br><br>
         With best wishes,<br>
         Team UDGAM`,

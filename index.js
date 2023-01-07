@@ -225,7 +225,6 @@ app.post("/backend/registersave", async (req, res) => {
 						const sanitizedLastname = lastName;
 						var data;
 						if (outlook && rollno && department) {
-							
 							data = {
 								udgid: udgid,
 								user_id: generatedId,

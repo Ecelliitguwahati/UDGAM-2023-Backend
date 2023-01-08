@@ -99,7 +99,7 @@ app.post("/backend/create-order", async (req, res) => {
 });
 
 // app.post("/backend/pay-order", async (req, res) => {
-// 	await client.connect(async function (err) {
+// 	await client.connect().then(async ()=> {
 // 		console.log("Connected successfully to server");
 // 		console.log("I am here registering");
 // 		try {
@@ -149,7 +149,7 @@ async function generateudgid(min, max, users) { // min and max included
 }
 
 app.post("/backend/addtolist", async (req, res) => {
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		console.log("I am here registering");
 		const database = client.db("app-data");
@@ -173,6 +173,10 @@ app.post("/backend/addtolist", async (req, res) => {
 
 		client.close();
 		return res.status(201).send({ message: "YES" });
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 
 
@@ -195,7 +199,7 @@ app.post("/backend/registersave", async (req, res) => {
 	}
 
 	var udgid;
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		try {
 
@@ -264,13 +268,17 @@ app.post("/backend/registersave", async (req, res) => {
 			console.log(err);
 			return res.status(500).send({ message: err.message });
 		}
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 });
 
 //RESET PASSWORD REQ
 app.post("/backend/resetpasswordreq", async (req, res) => {
 	console.log("I am here resetting req");
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		const { email } = req.body;
 
@@ -325,6 +333,10 @@ app.post("/backend/resetpasswordreq", async (req, res) => {
 			client.close()
 			return res.status(500).send({ message: err.message });
 		}
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 });
 
@@ -333,7 +345,7 @@ app.post("/backend/resetpassword", async (req, res) => {
 	console.log("I am here resetting");
 
 	const { email, newpwd, token } = req.body;
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 
 		const database = client.db("app-data");
@@ -374,12 +386,16 @@ app.post("/backend/resetpassword", async (req, res) => {
 			client.close()
 			return res.status(500).send({ message: err.message });
 		}
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 });
 
 //Checking if he has purchased. If this API returns yes, then he purchased. If no then he didnt purchase. In req.body send only email address as udgam id
 app.post("/backend/checkifpurchased", async (req, res) => {
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		console.log("I am here checking");
 
@@ -403,12 +419,16 @@ app.post("/backend/checkifpurchased", async (req, res) => {
 			client.close()
 			return res.status(500).send({ message: err.message });
 		}
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 });
 // For auth in IF website using outlook and pwd
 app.post("/backend/internfairauth", async (req, res) => {
 	console.log("I am here checking");
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		const { outlook, password } = req.body;
 
@@ -442,12 +462,16 @@ app.post("/backend/internfairauth", async (req, res) => {
 			client.close()
 			return res.status(500).send({ message: err.message });
 		}
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 });
 // Check if outlook and roll no are duplicate or not
 app.post("/backend/checkoutlook", async (req, res) => {
 	console.log("I am here checking outlook");
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		const { outlook, rollno } = req.body;
 
@@ -473,13 +497,17 @@ app.post("/backend/checkoutlook", async (req, res) => {
 			client.close()
 			return res.status(500).send({ message: err.message });
 		}
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 });
 
 // Mail pass
 app.post("/backend/mailpass", async (req, res) => {
 	console.log("I am here checking");
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		const pdf = new pdfkit({
 			autoFirstPage: false
@@ -552,12 +580,16 @@ app.post("/backend/mailpass", async (req, res) => {
 			client.close()
 			return res.status(500).send({ message: err.message });
 		}
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 });
 
 app.post("/backend/contact", async (req, res) => {
 	console.log("I am here checking");
-	await client.connect(async function (err) {
+	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		const { firstName, lastName, email, reason, message } = req.body;
 
@@ -589,6 +621,10 @@ app.post("/backend/contact", async (req, res) => {
 			client.close()
 			return res.status(500).send({ message: err.message });
 		}
+	}).catch ((err)=>{
+		console.log(err);
+		client.close()
+		return res.status(500).send({ message: err.message });
 	});
 });
 

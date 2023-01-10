@@ -205,16 +205,35 @@ app.post("/backend/registersave", async (req, res) => {
 
 			const database = client.db("app-data");
 			const users = database.collection("usersData");
-			const existingUser = await users.findOne({ email });
+			var existingUser = await users.findOne({ email });
 			udgid = await generateudgid(1000, 9999, users);
-			console.log(existingUser);
 			if (existingUser) {
 				client.close()
 
 				console.log("user already exists");
 				return res.status(201).send({
 					message:
-						"You had already purchased the UDGAM Pass. Still you will be mailed for the same.",
+						"Email exists",
+				});
+			}
+			 existingUser = await users.findOne({ outlook });
+			 if (existingUser) {
+				client.close()
+
+				console.log("user already exists");
+				return res.status(201).send({
+					message:
+						"Outlook exists",
+				});
+			}
+			existingUser = await users.findOne({ rollno });
+			if (existingUser) {
+				client.close()
+
+				console.log("user already exists");
+				return res.status(201).send({
+					message:
+						"Roll number exists",
 				});
 			}
 

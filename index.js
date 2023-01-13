@@ -26,11 +26,12 @@ app.use(express.json());
 const connectionParams = {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
+
 };
 
 
 
-const client = new MongoClient(url);
+const client = new MongoClient(url,connectionParams);
 // Use connect method to connect to the Server
 
 app.use(cors());
@@ -88,11 +89,11 @@ app.post("/backend/create-order", async (req, res) => {
 		};
 		const order = await instance.orders.create(options);
 		if (!order) return res.status(500).send("Some error occured");
-		client.close();
+	
 		return res.send(order);
 	} catch (error) {
 		console.log(error);
-		client.close();
+		
 		return res.status(500).send(error);
 	}
 

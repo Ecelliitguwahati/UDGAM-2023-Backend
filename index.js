@@ -569,7 +569,7 @@ app.post("/backend/mailpass", async (req, res) => {
 						<br><br>
 						Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use your outlook Id and password to login into intern fair website later</i>
 						<br><br>
-						Your password is <b>${existingUser.rollno}</b>. Please reset your password at www.udgamiitg.com/resetpass
+						If you forget, Please reset your password at www.udgamiitg.com/resetpass
 						<br><br>
 						With best wishes,<br>
 						Team UDGAM`,

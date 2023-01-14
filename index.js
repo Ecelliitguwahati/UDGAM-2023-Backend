@@ -183,8 +183,13 @@ app.post("/backend/addtolist", async (req, res) => {
 
 });
 app.post("/backend/registersave", async (req, res) => {
+	secretkey=req.header('secretkey');
+	console.log(process.env.SECRETKEY)
+	if(secretkey!=process.env.SECRETKEY){
+		return res.status(400).send({ message: "Unauthorized" });
+	}
 	console.log("I am here registering");
-
+ 
 	const {
 		lastName,
 		firstName,
@@ -194,12 +199,13 @@ app.post("/backend/registersave", async (req, res) => {
 		contact,
 		email,
 		password,
+		
 	} = req.body;
 	if (lastName == null || firstName == null || contact == null || email == null || password == null) {
-		return res.status(400).send({ message: "Unauthorized" });
+		return res.status(400).send({ message: "Unauthorized2" });
 	}
 
-	var udgid;
+	
 	await client.connect().then(async ()=> {
 		console.log("Connected successfully to server");
 		try {
@@ -217,6 +223,7 @@ app.post("/backend/registersave", async (req, res) => {
 						"Email exists",
 				});
 			}
+			if(outlook){
 			 existingUser = await users.findOne({ outlook });
 			 if (existingUser) {
 				client.close()
@@ -227,6 +234,8 @@ app.post("/backend/registersave", async (req, res) => {
 						"Outlook exists",
 				});
 			}
+		}
+		if(rollno){
 			existingUser = await users.findOne({ rollno });
 			if (existingUser) {
 				client.close()
@@ -237,6 +246,7 @@ app.post("/backend/registersave", async (req, res) => {
 						"Roll number exists",
 				});
 			}
+		}
 
 			const generatedId = uuidv4();
 			// const salt = await bcrypt.genSalt(10);
@@ -551,7 +561,7 @@ app.post("/backend/mailpass", async (req, res) => {
 						from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
 						to: [existingUser.email, existingUser.outlook ? existingUser.outlook : null],
 						subject: "Welcome to UDGAM 2023",
-						html: `Hello ${existingUser.firstName},
+						html: `Dear ${existingUser.firstName},
 						<br><br>
 						Thank you for purchasing the <b>UDGAM Pass</b>. With this pass, you can get access to events like Lecture Series, Internfair and Fun events.
 						<br><br>
@@ -617,7 +627,7 @@ app.post("/backend/contact", async (req, res) => {
 			var mailOptions = {
 				from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
 				to: process.env.USEREMAIL,
-				subject: `An user contcted (${reason})`,
+				subject: `A user contacted (${reason})`,
 				html: `Name: ${firstName + " " + lastName}
         <br>
         Email: ${email}

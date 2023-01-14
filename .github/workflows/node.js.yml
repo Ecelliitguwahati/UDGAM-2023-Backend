@@ -30,6 +30,7 @@ jobs:
         echo "USERPASSWORD='${{secrets.USERPASSWORD}}'" >> config/config.env
         echo "RAZORPAY_KEY_ID=${{secrets.RAZORPAY_KEY_ID}}" >> config/config.env
         echo "RAZORPAY_SECRET=${{secrets.RAZORPAY_SECRET}}" >> config/config.env
+        echo "SECRETKEY=${{secrets.SECRETKEY}}" >> config/config.env
     - name: start
       run: sudo pm2 kill
     - name: start2

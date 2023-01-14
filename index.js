@@ -78,7 +78,7 @@ app.get("/backend/get-razorpay-key", (req, res) => {
 app.post("/backend/create-order", async (req, res) => {
 
 	try {
-		console.log("I am here");
+	
 		const instance = new Razorpay({
 			key_id: process.env.RAZORPAY_KEY_ID,
 			key_secret: process.env.RAZORPAY_SECRET,
@@ -92,7 +92,7 @@ app.post("/backend/create-order", async (req, res) => {
 	
 		return res.send(order);
 	} catch (error) {
-		console.log(error);
+		
 		
 		return res.status(500).send(error);
 	}
@@ -160,9 +160,9 @@ app.post("/backend/addtolist", async (req, res) => {
 			email
 		} = req.body;
 		const dupemail = email;
-		console.log(dupemail)
+	
 		const existingUser = await users.findOne({ email: dupemail });
-		console.log(existingUser)
+	
 		if (existingUser) {
 		}
 		else {
@@ -184,7 +184,7 @@ app.post("/backend/addtolist", async (req, res) => {
 });
 app.post("/backend/registersave", async (req, res) => {
 	secretkey=req.header('secretkey');
-	console.log(process.env.SECRETKEY)
+
 	if(secretkey!=process.env.SECRETKEY){
 		return res.status(400).send({ message: "Unauthorized" });
 	}
@@ -207,7 +207,6 @@ app.post("/backend/registersave", async (req, res) => {
 
 	
 	await client.connect().then(async ()=> {
-		console.log("Connected successfully to server");
 		try {
 
 			const database = client.db("app-data");
@@ -217,7 +216,7 @@ app.post("/backend/registersave", async (req, res) => {
 			if (existingUser) {
 				client.close()
 
-				console.log("user already exists");
+				
 				return res.status(201).send({
 					message:
 						"Email exists",
@@ -228,7 +227,7 @@ app.post("/backend/registersave", async (req, res) => {
 			 if (existingUser) {
 				client.close()
 
-				console.log("user already exists");
+
 				return res.status(201).send({
 					message:
 						"Outlook exists",
@@ -240,7 +239,7 @@ app.post("/backend/registersave", async (req, res) => {
 			if (existingUser) {
 				client.close()
 
-				console.log("user already exists");
+	
 				return res.status(201).send({
 					message:
 						"Roll number exists",

@@ -201,7 +201,7 @@ app.post("/backend/registersave", async (req, res) => {
 		password,
 		orderAmount
 	} = req.body;
-	if(orderAmount<=198 || orderAmount == null){
+	if(orderAmount == null){
 		return res.status(400).send({ message: "Unauthorized3" });
 	}
 	if (lastName == null || firstName == null || contact == null || email == null || password == null) {

@@ -185,9 +185,9 @@ app.post("/backend/addtolist", async (req, res) => {
 app.post("/backend/registersave", async (req, res) => {
 	secretkey=req.header('secretkey');
     
-	if(secretkey!=process.env.SECRETKEY){
-		return res.status(400).send({ message: "Unauthorized" });
-	}
+	// if(secretkey!=process.env.SECRETKEY){
+	// 	return res.status(400).send({ message: "Unauthorized" });
+	// }
 	console.log("I am here registering");
  
 	const {
@@ -569,7 +569,7 @@ app.post("/backend/mailpass", async (req, res) => {
 						<br><br>
 						Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use your outlook Id and password to login into intern fair website later</i>
 						<br><br>
-						In case you forget your password, please reset your password at www.udgamiitg.com/resetpass
+						Your password is <b>${existingUser.rollno}</b>. Please reset your password at www.udgamiitg.com/resetpass
 						<br><br>
 						With best wishes,<br>
 						Team UDGAM`,

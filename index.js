@@ -183,8 +183,7 @@ app.post("/backend/addtolist", async (req, res) => {
 
 });
 app.post("/backend/registersave", async (req, res) => {
-	secretkey=req.header('secretkey');
-    
+	
 	// if(secretkey!=process.env.SECRETKEY){
 	// 	return res.status(400).send({ message: "Unauthorized" });
 	// }
@@ -201,9 +200,9 @@ app.post("/backend/registersave", async (req, res) => {
 		password,
 		orderAmount
 	} = req.body;
-	if(orderAmount<=198 || orderAmount == null || !orderAmount){
-		return res.status(400).send({ message: "Unauthorized3" });
-	}
+	// if(orderAmount<=198 || orderAmount == null || !orderAmount){
+	// 	return res.status(400).send({ message: "Unauthorized3" });
+	// }
 	if (lastName == null || firstName == null || contact == null || email == null || password == null) {
 		return res.status(400).send({ message: "Unauthorized2" });
 	}

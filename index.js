@@ -333,7 +333,7 @@ app.post("/backend/resetpasswordreq", async (req, res) => {
 					from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
 					to: [existingUser.email, existingUser.outlook ? existingUser.outlook : null],
 					subject: "Request for resetting password of UDGAM Pass",
-					html: `Hello ${existingUser.firstName},
+					html: `Dear ${existingUser.firstName},
         <br><br>
         We received a request for resetting your UDGAM Pass password
         <br><br>

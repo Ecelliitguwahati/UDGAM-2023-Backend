@@ -182,130 +182,130 @@ app.post("/backend/addtolist", async (req, res) => {
 
 
 });
-app.post("/backend/registersave", async (req, res) => {
+// app.post("/backend/registersave", async (req, res) => {
 
     
-	if(req.header('secretkey')!=process.env.SECRETKEY){
-		return res.status(400).send({ message: "Unauthorized" });
-	}
-	console.log("I am here registering");
+// 	if(req.header('secretkey')!=process.env.SECRETKEY){
+// 		return res.status(400).send({ message: "Unauthorized" });
+// 	}
+// 	console.log("I am here registering");
  
-	const {
-		lastName,
-		firstName,
-		outlook,
-		rollno,
-		department,
-		contact,
-		email,
-		password,
-		orderAmount
-	} = req.body;
-	if(orderAmount<=198 && orderAmount == null){
-		return res.status(400).send({ message: "Unauthorized3" });
-	}
-	if (lastName == null || firstName == null || contact == null || email == null || password == null) {
-		return res.status(400).send({ message: "Unauthorized2" });
-	}
+// 	const {
+// 		lastName,
+// 		firstName,
+// 		outlook,
+// 		rollno,
+// 		department,
+// 		contact,
+// 		email,
+// 		password,
+// 		orderAmount
+// 	} = req.body;
+// 	if(orderAmount<=198 && orderAmount == null){
+// 		return res.status(400).send({ message: "Unauthorized3" });
+// 	}
+// 	if (lastName == null || firstName == null || contact == null || email == null || password == null) {
+// 		return res.status(400).send({ message: "Unauthorized2" });
+// 	}
 
 	
-	await client.connect().then(async ()=> {
-		try {
+// 	await client.connect().then(async ()=> {
+// 		try {
 
-			const database = client.db("app-data");
-			const users = database.collection("usersData");
-			var existingUser = await users.findOne({ email });
-			udgid = await generateudgid(1000, 9999, users);
-			if (existingUser) {
-				client.close()
+// 			const database = client.db("app-data");
+// 			const users = database.collection("usersData");
+// 			var existingUser = await users.findOne({ email });
+// 			udgid = await generateudgid(1000, 9999, users);
+// 			if (existingUser) {
+// 				client.close()
 
 				
-				return res.status(201).send({
-					message:
-						"Email exists",
-				});
-			}
-			if(outlook){
-			 existingUser = await users.findOne({ outlook });
-			 if (existingUser) {
-				client.close()
+// 				return res.status(201).send({
+// 					message:
+// 						"Email exists",
+// 				});
+// 			}
+// 			if(outlook){
+// 			 existingUser = await users.findOne({ outlook });
+// 			 if (existingUser) {
+// 				client.close()
 
 
-				return res.status(201).send({
-					message:
-						"Outlook exists",
-				});
-			}
-		}
-		if(rollno){
-			existingUser = await users.findOne({ rollno });
-			if (existingUser) {
-				client.close()
+// 				return res.status(201).send({
+// 					message:
+// 						"Outlook exists",
+// 				});
+// 			}
+// 		}
+// 		if(rollno){
+// 			existingUser = await users.findOne({ rollno });
+// 			if (existingUser) {
+// 				client.close()
 
 	
-				return res.status(201).send({
-					message:
-						"Roll number exists",
-				});
-			}
-		}
+// 				return res.status(201).send({
+// 					message:
+// 						"Roll number exists",
+// 				});
+// 			}
+// 		}
 
-			const generatedId = uuidv4();
-			// const salt = await bcrypt.genSalt(10);
-			// const hashedPassword = await bcrypt.hash(password,salt);
-			bcrypt.genSalt(saltRounds, function (err, salt) {
-				bcrypt.hash(password, salt, async function (err, hash) {
-					try {
-						const sanitizedEmail = email; // === 'string' ? email.toLowerCase() : '';
-						const sanitizedName = firstName;
-						const sanitizedLastname = lastName;
-						var data;
-						if (outlook && rollno && department) {
-							data = {
-								udgid: udgid,
-								user_id: generatedId,
-								firstName: sanitizedName,
-								lastName: sanitizedLastname,
-								contact: contact,
-								outlook: outlook,
-								rollno: rollno,
-								email: sanitizedEmail,
-								department: department,
-								hashedPassword: hash,
-							};
-						}
-						else {
-							data = {
-								udgid: udgid,
-								user_id: generatedId,
-								firstName: sanitizedName,
-								lastName: sanitizedLastname,
-								contact: contact,
-								email: sanitizedEmail,
-								hashedPassword: hash,
-							};
-						}
+// 			const generatedId = uuidv4();
+// 			// const salt = await bcrypt.genSalt(10);
+// 			// const hashedPassword = await bcrypt.hash(password,salt);
+// 			bcrypt.genSalt(saltRounds, function (err, salt) {
+// 				bcrypt.hash(password, salt, async function (err, hash) {
+// 					try {
+// 						const sanitizedEmail = email; // === 'string' ? email.toLowerCase() : '';
+// 						const sanitizedName = firstName;
+// 						const sanitizedLastname = lastName;
+// 						var data;
+// 						if (outlook && rollno && department) {
+// 							data = {
+// 								udgid: udgid,
+// 								user_id: generatedId,
+// 								firstName: sanitizedName,
+// 								lastName: sanitizedLastname,
+// 								contact: contact,
+// 								outlook: outlook,
+// 								rollno: rollno,
+// 								email: sanitizedEmail,
+// 								department: department,
+// 								hashedPassword: hash,
+// 							};
+// 						}
+// 						else {
+// 							data = {
+// 								udgid: udgid,
+// 								user_id: generatedId,
+// 								firstName: sanitizedName,
+// 								lastName: sanitizedLastname,
+// 								contact: contact,
+// 								email: sanitizedEmail,
+// 								hashedPassword: hash,
+// 							};
+// 						}
 
-						await users.insertOne(data);
-						client.close();
-						return res.status(201).json({ userId: generatedId });
-					} catch (err) {
-						client.close();
-						return res.status(500).send({ message: err.message });
-					}
-				});
-			});
-		} catch (err) {
-			client.close();
-			console.log(err);
-			return res.status(500).send({ message: err.message });
-		}
-	}).catch ((err)=>{
-		console.log(err);
-		client.close()
-		return res.status(500).send({ message: err.message });
-	});
-});
+// 						await users.insertOne(data);
+// 						client.close();
+// 						return res.status(201).json({ userId: generatedId });
+// 					} catch (err) {
+// 						client.close();
+// 						return res.status(500).send({ message: err.message });
+// 					}
+// 				});
+// 			});
+// 		} catch (err) {
+// 			client.close();
+// 			console.log(err);
+// 			return res.status(500).send({ message: err.message });
+// 		}
+// 	}).catch ((err)=>{
+// 		console.log(err);
+// 		client.close()
+// 		return res.status(500).send({ message: err.message });
+// 	});
+// });
 
 //RESET PASSWORD REQ
 app.post("/backend/resetpasswordreq", async (req, res) => {
@@ -537,87 +537,87 @@ app.post("/backend/checkoutlook", async (req, res) => {
 });
 
 // Mail pass
-app.post("/backend/mailpass", async (req, res) => {
-	console.log("I am here checking");
-	await client.connect().then(async ()=> {
-		console.log("Connected successfully to server");
-		const pdf = new pdfkit({
-			autoFirstPage: false
-		});
-		const { email } = req.body;
+// app.post("/backend/mailpass", async (req, res) => {
+// 	console.log("I am here checking");
+// 	await client.connect().then(async ()=> {
+// 		console.log("Connected successfully to server");
+// 		const pdf = new pdfkit({
+// 			autoFirstPage: false
+// 		});
+// 		const { email } = req.body;
 
-		const database = client.db("app-data");
-		const users = database.collection("usersData");
-		try {
-			const existingUser = await users.findOne({ email });
+// 		const database = client.db("app-data");
+// 		const users = database.collection("usersData");
+// 		try {
+// 			const existingUser = await users.findOne({ email });
 
-			console.log(existingUser);
-			if (existingUser) {
-				const name = existingUser.firstName + " " + existingUser.lastName;
-				const id = existingUser.udgid;
-				const buffers = [];
-				pdf.on('data', buffers.push.bind(buffers));
-				pdf.on('end', async () => {
-					let pdfData = Buffer.concat(buffers);
-					var mailOptions = {
-						from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
-						to: [existingUser.email, existingUser.outlook ? existingUser.outlook : null],
-						subject: "Welcome to UDGAM 2023",
-						html: `Dear ${existingUser.firstName},
-						<br><br>
-						Thank you for purchasing the <b>UDGAM Pass</b>. With this pass, you can get access to events like Lecture Series, Internfair and Fun events.
-						<br><br>
-						Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use your outlook Id and password to login into intern fair website later</i>
-						<br><br>
-						If you forget, Please reset your password at www.udgamiitg.com/resetpass
-						<br><br>
-						With best wishes,<br>
-						Team UDGAM`,
-						attachments: [{
-							filename: 'UDGAM Pass.pdf',
-							content: pdfData
-						}]
-					};
-					//sending verification mail
-					await transporter.sendMail(mailOptions, function (error, info) {
-						if (error) {
-							console.log(error); client.close()
-							return res.status(500).send({ message: error });
-						}
-						client.close()
-						return res.status(201).send({ message: "YES" });
-					});
-				});
+// 			console.log(existingUser);
+// 			if (existingUser) {
+// 				const name = existingUser.firstName + " " + existingUser.lastName;
+// 				const id = existingUser.udgid;
+// 				const buffers = [];
+// 				pdf.on('data', buffers.push.bind(buffers));
+// 				pdf.on('end', async () => {
+// 					let pdfData = Buffer.concat(buffers);
+// 					var mailOptions = {
+// 						from: `UDGAM 2023 <${process.env.USEREMAIL}>`,
+// 						to: [existingUser.email, existingUser.outlook ? existingUser.outlook : null],
+// 						subject: "Welcome to UDGAM 2023",
+// 						html: `Dear ${existingUser.firstName},
+// 						<br><br>
+// 						Thank you for purchasing the <b>UDGAM Pass</b>. With this pass, you can get access to events like Lecture Series, Internfair and Fun events.
+// 						<br><br>
+// 						Your pass credentials are your email id and the password you entered during registration.<br/><i><b>For IITG students:</b> Please use your outlook Id and password to login into intern fair website later</i>
+// 						<br><br>
+// 						If you forget, Please reset your password at www.udgamiitg.com/resetpass
+// 						<br><br>
+// 						With best wishes,<br>
+// 						Team UDGAM`,
+// 						attachments: [{
+// 							filename: 'UDGAM Pass.pdf',
+// 							content: pdfData
+// 						}]
+// 					};
+// 					//sending verification mail
+// 					await transporter.sendMail(mailOptions, function (error, info) {
+// 						if (error) {
+// 							console.log(error); client.close()
+// 							return res.status(500).send({ message: error });
+// 						}
+// 						client.close()
+// 						return res.status(201).send({ message: "YES" });
+// 					});
+// 				});
 
 
-				var img = pdf.openImage('./UDGAMFRONT.png');
-				pdf.fontSize(25);
-				pdf.addPage({ size: [img.width, img.height], margin: 0 });
-				pdf.image(img, 0, 0);
-				console.log(img.width);
-				console.log(img.height)
-				pdf.text(name, 972.4045, 317.8625)
-				pdf.text(id, 942.4245, 354.0105)
-				var img = pdf.openImage('./UDGAMBACK.png');
-				pdf.addPage({ size: [img.width, img.height], margin: 0 });
-				pdf.image(img, 0, 0);
-				pdf.end();
+// 				var img = pdf.openImage('./UDGAMFRONT.png');
+// 				pdf.fontSize(25);
+// 				pdf.addPage({ size: [img.width, img.height], margin: 0 });
+// 				pdf.image(img, 0, 0);
+// 				console.log(img.width);
+// 				console.log(img.height)
+// 				pdf.text(name, 972.4045, 317.8625)
+// 				pdf.text(id, 942.4245, 354.0105)
+// 				var img = pdf.openImage('./UDGAMBACK.png');
+// 				pdf.addPage({ size: [img.width, img.height], margin: 0 });
+// 				pdf.image(img, 0, 0);
+// 				pdf.end();
 
-			} else {
-				client.close()
-				return res.status(201).send({ message: "NO" });
-			}
-		} catch (err) {
-			console.log(err);
-			client.close()
-			return res.status(500).send({ message: err.message });
-		}
-	}).catch ((err)=>{
-		console.log(err);
-		client.close()
-		return res.status(500).send({ message: err.message });
-	});
-});
+// 			} else {
+// 				client.close()
+// 				return res.status(201).send({ message: "NO" });
+// 			}
+// 		} catch (err) {
+// 			console.log(err);
+// 			client.close()
+// 			return res.status(500).send({ message: err.message });
+// 		}
+// 	}).catch ((err)=>{
+// 		console.log(err);
+// 		client.close()
+// 		return res.status(500).send({ message: err.message });
+// 	});
+// });
 
 app.post("/backend/contact", async (req, res) => {
 	console.log("I am here checking");

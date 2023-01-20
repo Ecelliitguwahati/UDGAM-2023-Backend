@@ -185,9 +185,9 @@ app.post("/backend/addtolist", async (req, res) => {
 app.post("/backend/registersave", async (req, res) => {
 
     
-// 	if(req.header('secretkey')!=process.env.SECRETKEY){
-// 		return res.status(400).send({ message: "Unauthorized" });
-// 	}
+	if(req.header('secretkey')!=process.env.SECRETKEY){
+		return res.status(400).send({ message: "Unauthorized" });
+	}
 	console.log("I am here registering");
  
 	const {
@@ -536,7 +536,6 @@ app.post("/backend/checkoutlook", async (req, res) => {
 	});
 });
 
-Mail pass
 app.post("/backend/mailpass", async (req, res) => {
 	console.log("I am here checking");
 	await client.connect().then(async ()=> {
